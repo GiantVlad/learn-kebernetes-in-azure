@@ -1,0 +1,102 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lara-kube-php
+  namespace: default
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: lara-kube-php
+  template:
+    metadata:
+      labels:
+        app: lara-kube-php
+    spec:
+      containers:
+        - name: nginx
+          image: kubnginx:0.0.8
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 80
+#          volumeMounts:
+#            - name: laravel-code
+#              mountPath: /var/www/html
+        - name: php-fpm
+          image: php-fpm83:0.0.1
+          imagePullPolicy: Never
+#          volumeMounts:
+#            - name: laravel-code
+#              mountPath: /var/www/html
+#      volumes:
+#        - name: laravel-code
+#          emptyDir: { }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubnextjs-deployment
+  labels:
+    app: kubnextjs
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: kubnextjs
+  template:
+    metadata:
+      labels:
+        app: kubnextjs
+    spec:
+      containers:
+        - name: kubnextjs-container
+          image: kubnextjs-app:0.0.1
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: production
+      imagePullSecrets:
+        - name: acr-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lara-kube-php-service
+spec:
+  selector:
+    app: lara-kube-php
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubnextjs-service
+spec:
+  selector:
+    app: kubnextjs
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: lara-kube
+spec:
+  rules:
+    - host: lara-kube.lcl
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: lara-kube-php-service
+                port:
+                  number: 80
