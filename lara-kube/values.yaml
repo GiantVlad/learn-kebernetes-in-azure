@@ -11,17 +11,18 @@ imageNginx:
   # This sets the pull policy for images.
   pullPolicy: Never
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "latest"
+  tag: "0.0.8"
 
 imagePhp:
   repository: php-fpm83
   # This sets the pull policy for images.
   pullPolicy: Never
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "latest"
+  tag: "0.0.1"
 
 # This is for the secretes for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
+
 # This is to override the chart name.
 nameOverride: ""
 fullnameOverride: ""
@@ -134,7 +135,7 @@ tolerations: []
 
 affinity: {}
 
-#redis:
-#  architecture: standalone
-#  auth:
-#    enabled: false
+redis:
+  architecture: standalone
+  auth:
+    enabled: false

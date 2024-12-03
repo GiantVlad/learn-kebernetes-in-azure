@@ -5,7 +5,7 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 # Copy package.json and install dependencies
-COPY nextjs-spa/package.json package-lock.json ./
+COPY nextjs-spa/package.json nextjs-spa/package-lock.json ./
 RUN npm install
 
 # Copy all files and build the app

@@ -5,7 +5,7 @@ metadata:
   name: lara-kube-php
   namespace: default
 spec:
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
       app: lara-kube-php
@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: kubnginx:0.0.8
+          image: kubnginx:0.0.14
           imagePullPolicy: Never
           ports:
             - containerPort: 80
@@ -51,7 +51,7 @@ spec:
     spec:
       containers:
         - name: kubnextjs-container
-          image: kubnextjs-app:0.0.1
+          image: kubnextjs-app:0.0.2
           ports:
             - containerPort: 3000
           env:
@@ -77,6 +77,7 @@ kind: Service
 metadata:
   name: kubnextjs-service
 spec:
+  clusterIP: None
   selector:
     app: kubnextjs
   ports:
@@ -88,6 +89,10 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: lara-kube
+  annotations:
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "route"
+    nginx.ingress.kubernetes.io/session-cookie-hash: "sha1"
 spec:
   rules:
     - host: lara-kube.lcl

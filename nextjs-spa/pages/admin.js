@@ -3,7 +3,23 @@ import styles from '../styles/Home.module.css';
 import {useEffect, useState} from "react";
 import axios from "axios";
 
-export default function Admin() {
+export async function getServerSideProps(context) {
+    // Access the context object to get request and query details
+    const { req, res, query, params } = context;
+
+    console.log("Server log Query Params:", query);
+
+    // Fetch data or perform server-side logic
+    const mess = { message: "Hello from the server!" };
+
+    return {
+        props: {
+            mess, // Pass the fetched data to the page as props
+        },
+    };
+}
+
+export default function Admin({mess}) {
     const [data, setData] = useState(null)
 
     useEffect(() => {
@@ -28,14 +44,15 @@ export default function Admin() {
                     Welcome to KuberNext!
                 </h1>
 
-                <p className={styles.description}>
-                    Get started by editing <code>pages/index.js</code>
-                </p>
+                <div>
+                    <h1>Server-Side Rendered Page</h1>
+                    <p>{mess.message}</p>
+                </div>
             </main>
             <div>
                 {data && (
                     <ul>
-                        {data.data.map(item => (
+                    {data.data.map(item => (
                             <li key={item.key}>
                                 {item.title}
                             </li>
