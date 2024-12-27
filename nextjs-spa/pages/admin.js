@@ -23,9 +23,11 @@ export default function Admin({mess}) {
     const [data, setData] = useState(null)
 
     useEffect(() => {
+        axios.defaults.withCredentials = true;
+        axios.defaults.withXSRFToken = true;
         const fetchData = async () => {
             const result = await axios(
-                'http://lara-kube.lcl/api'
+                '/api'
             )
             setData(result.data)
         }
@@ -52,12 +54,17 @@ export default function Admin({mess}) {
             <div>
                 {data && (
                     <ul>
-                    {data.data.map(item => (
+                        {data.data.map(item => (
                             <li key={item.key}>
                                 {item.title}
                             </li>
                         ))}
                     </ul>
+                )}
+            </div>
+            <div>
+                {data && data.username && (
+                    <h4>User: {data.username}</h4>
                 )}
             </div>
 

@@ -11,7 +11,7 @@ imageNginx:
   # This sets the pull policy for images.
   pullPolicy: Never
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "0.0.8"
+  tag: "0.0.14"
 
 imagePhp:
   repository: php-fpm83
@@ -72,7 +72,7 @@ ingress:
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   hosts:
-    - host: lara-kube.lcl
+    - host: lara-helm.lcl
       paths:
         - path: /
           pathType: ImplementationSpecific
@@ -113,8 +113,8 @@ autoscaling:
   enabled: true
   minReplicas: 2
   maxReplicas: 5
-  targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80
+  targetCPUUtilizationPercentage: 85
+  targetMemoryUtilizationPercentage: 80
 
 # Additional volumes on the output Deployment definition.
 volumes: []

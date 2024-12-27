@@ -1,0 +1,136 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lara-kube-php
+  namespace: default
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: lara-kube-php
+  template:
+    metadata:
+      labels:
+        app: lara-kube-php
+    spec:
+      containers:
+        - name: nginx
+          image: kuber2.azurecr.io/kub-nginx:v1.0.14
+          # kub-nginx:0.0.14 - local
+#          imagePullPolicy: Never
+          ports:
+            - containerPort: 80
+#            - containerPort: 443
+#          volumeMounts:
+#            - name: laravel-code
+#              mountPath: /var/www/html
+        - name: php-fpm
+          image: kuber2.azurecr.io/lara-app:v1.0.17
+          #php-fpm83:0.0.1 - local
+#          imagePullPolicy: Never
+#          volumeMounts:
+#            - name: laravel-code
+#              mountPath: /var/www/html
+#        imagePullSecrets:
+#          - name: acr-secret
+#      volumes:
+#        - name: laravel-code
+#          emptyDir: { }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubnextjs-deployment
+  labels:
+    app: kubnextjs
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: kubnextjs
+  template:
+    metadata:
+      labels:
+        app: kubnextjs
+    spec:
+      containers:
+        - name: kubnextjs-container
+          image: kuber2.azurecr.io/kubnextjs-app:v1.0.3
+          # kubnextjs-app:0.0.3
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: production
+      imagePullSecrets:
+        - name: acr-secret
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lara-kube-php-service
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 74.248.75.234
+  selector:
+    app: lara-kube-php
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+      name: http
+#    - protocol: TCP
+#      port: 443
+#      targetPort: 443
+#      name: https
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubnextjs-service
+spec:
+  clusterIP: None
+  selector:
+    app: kubnextjs
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: nginx
+spec:
+  controller: k8s.io/ingress-nginx
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: lara-kube-dev
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/rewrite-target: /
+#    nginx.ingress.kubernetes.io/affinity: "cookie"
+#    nginx.ingress.kubernetes.io/session-cookie-name: "route"
+#    nginx.ingress.kubernetes.io/session-cookie-hash: "sha1"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+      - dev.cloud-workflow.com
+      secretName: dev-cloud-secret
+  rules:
+    - host: dev.cloud-workflow.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: lara-kube-php-service
+                port:
+                  number: 80
+

@@ -1,7 +1,6 @@
 <?php
 
+use App\Http\Controllers\ApiController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return response()->json(['data' => [['key' => 'item1', 'title' => 'The First Item'], ['key' => 'item2', 'title' => 'The Second Item']]]);
-});
+Route::middleware('auth:sanctum')->get('/', [ApiController::class, 'getData']);

@@ -35,4 +35,14 @@ return [
         ],
     ],
 
+    'microsoft' => [
+        'client_id' => env('AZURE_CLIENT_ID'),
+        'client_secret' => env('AZURE_CLIENT_SECRET'),
+        'redirect' => env('AZURE_REDIRECT_URI'),
+        'tenant_id' => env('AZURE_TENANT_ID'),
+    ],
+    //AZURE_CLIENT_ID=4d37d9de-90f1-4b8d-a8e8-5509f31c7a1c
+    //AZURE_TENANT_ID=b0abdf42-4e2a-4e89-8019-c0185a735e0a
+    //AZURE_CLIENT_SECRET=rhT8Q~aqwZhlkYBkL-afGYl3cc8-sZhX7tyYOaxC
+    //AZURE_REDIRECT_URI=https://dev.cloud-workflow.com/auth/callback
 ];

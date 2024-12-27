@@ -1,0 +1,250 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lara-kube-php
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lara-kube-php
+  template:
+    metadata:
+      labels:
+        app: lara-kube-php
+    spec:
+      containers:
+        - name: nginx
+          image: europe-north1-docker.pkg.dev/booming-disk-444510-b1/lara-app/kub-nginx:v1.0.15
+          # kub-nginx:0.0.14 - local
+#          imagePullPolicy: Never
+          ports:
+            - containerPort: 80
+#            - containerPort: 443
+#          volumeMounts:
+#            - name: laravel-code
+#              mountPath: /var/www/html
+        - name: php-fpm
+          image: europe-north1-docker.pkg.dev/booming-disk-444510-b1/lara-app/lara-app:v1.0.32
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_ROOT_PASSWORD
+            - name: MYSQL_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_DATABASE
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_USER
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_PASSWORD
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_PASSWORD
+          #php-fpm83:0.0.1 - local
+#          imagePullPolicy: Never
+#          volumeMounts:
+#            - name: laravel-code
+#              mountPath: /var/www/html
+#        imagePullSecrets:
+#          - name: acr-secret
+#      volumes:
+#        - name: laravel-code
+#          emptyDir: { }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubnextjs-deployment
+  labels:
+    app: kubnextjs
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: kubnextjs
+  template:
+    metadata:
+      labels:
+        app: kubnextjs
+    spec:
+      containers:
+        - name: kubnextjs-container
+          image: europe-north1-docker.pkg.dev/booming-disk-444510-b1/lara-app/kubnextjs-app:v1.0.5
+          # kubnextjs-app:0.0.3
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: production
+      imagePullSecrets:
+        - name: acr-secret
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  namespace: default
+  labels:
+    app: mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_ROOT_PASSWORD
+            - name: MYSQL_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_DATABASE
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_USER
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_PASSWORD
+          volumeMounts:
+            - name: mysql-storage
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: mysql-storage
+          persistentVolumeClaim:
+            claimName: mysql-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lara-kube-php-service
+#  annotations:
+#    cloud.google.com/load-balancer-type: "External"
+spec:
+  type: NodePort
+  #loadBalancerIP: 35.228.212.18
+  selector:
+    app: lara-kube-php
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+      name: http
+#    - protocol: TCP
+#      port: 443
+#      targetPort: 443
+#      name: https
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubnextjs-service
+spec:
+  clusterIP: None
+  selector:
+    app: kubnextjs
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  namespace: default
+spec:
+  selector:
+    app: mysql
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
+  type: ClusterIP
+
+---
+#apiVersion: networking.k8s.io/v1
+#kind: IngressClass
+#metadata:
+#  name: nginx
+#spec:
+#  controller: k8s.io/ingress-nginx
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: lara-kube-dev
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: saas2-static-ip
+    networking.gke.io/managed-certificates: managed-cert
+    kubernetes.io/ingress.class: "gce"
+    #cert-manager.io/issue-temporary-certificate: "true"
+    #acme.cert-manager.io/http01-edit-in-place: "true"
+    #nginx.ingress.kubernetes.io/use-regex: "true"
+    #cert-manager.io/cluster-issuer: letsencrypt-prod
+    #nginx.ingress.kubernetes.io/rewrite-target: /
+#    nginx.ingress.kubernetes.io/affinity: "cookie"
+#    nginx.ingress.kubernetes.io/session-cookie-name: "route"
+#    nginx.ingress.kubernetes.io/session-cookie-hash: "sha1"
+spec:
+  ingressClassName: gce
+#  tls:
+#    - hosts:
+#      - dev.cloud-workflow.com
+#      #- www.dev.cloud-workflow.com
+#      secretName: tls-secret
+  defaultBackend:
+    service:
+      name: lara-kube-php-service
+      port:
+        number: 80
